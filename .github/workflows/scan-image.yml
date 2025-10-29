@@ -1,0 +1,41 @@
+name: Docker Image Build and Scan
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Set Up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Build Docker Image
+        run: |
+          docker build . -t your-docker-image:tag
+
+      - name: Shift Left Image Scan
+        uses: upwindsecurity/shiftleft-create-image-scan-event-action@main
+        with:
+          upwind_client_id: ${{ secrets.UPWIND_CLIENT_ID }}
+          upwind_client_secret: ${{ secrets.UPWIND_CLIENT_SECRET }}
+          docker_image: "your-docker-image:${GITHUB_SHA}"
+          pull_image: false
+
+      - name: Shift Left Image Publish
+        uses: upwindsecurity/shiftleft-create-image-publish-event-action@main
+        with:
+          upwind_client_id: ${{ secrets.UPWIND_CLIENT_ID }}
+          upwind_client_secret: ${{ secrets.UPWIND_CLIENT_SECRET }}
+          docker_image: "your-docker-image:your-specified-version"
+        with:
+          upwind_client_id: ${{ secrets.UPWIND_CLIENT_ID }}
+          upwind_client_secret: ${{ secrets.UPWIND_CLIENT_SECRET }}
+          docker_image: ${{ inputs.image_name }}
+          pull_image: false
